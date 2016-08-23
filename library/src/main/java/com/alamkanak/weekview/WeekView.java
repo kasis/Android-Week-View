@@ -47,6 +47,7 @@ import static com.alamkanak.weekview.WeekViewUtil.*;
  * Created by Raquib-ul-Alam Kanak on 7/21/2014.
  * Website: http://alamkanak.github.io/
  */
+
 public class WeekView extends View {
 
     private enum Direction {
@@ -1761,7 +1762,6 @@ public class WeekView extends View {
 
     /**
      * Set whether the week view should fling horizontally.
-     * @return True if it should have horizontal fling enabled.
      */
     public void setHorizontalFlingEnabled(boolean enabled) {
         mHorizontalFlingEnabled = enabled;
@@ -1777,7 +1777,6 @@ public class WeekView extends View {
 
     /**
      * Set whether the week view should fling vertically.
-     * @return True if it should have vertical fling enabled.
      */
     public void setVerticalFlingEnabled(boolean enabled) {
         mVerticalFlingEnabled = enabled;
