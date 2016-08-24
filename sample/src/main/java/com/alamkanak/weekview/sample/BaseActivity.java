@@ -4,8 +4,11 @@ import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alamkanak.weekview.DateTimeInterpreter;
@@ -23,7 +26,10 @@ import java.util.Locale;
  * Created by Raquib-ul-Alam Kanak on 1/3/2014.
  * Website: http://alamkanak.github.io
  */
-public abstract class BaseActivity extends AppCompatActivity implements WeekView.EventClickListener, MonthLoader.MonthChangeListener, WeekView.EventLongPressListener, WeekView.EmptyViewLongPressListener {
+public abstract class BaseActivity extends AppCompatActivity implements WeekView.EventClickListener, MonthLoader.MonthChangeListener, WeekView.EventLongPressListener, WeekView.EmptyViewLongPressListener, WeekView.HeaderAdapter {
+
+    final static SimpleDateFormat formatter = new SimpleDateFormat("EEE", Locale.US);
+
     private static final int TYPE_DAY_VIEW = 1;
     private static final int TYPE_THREE_DAY_VIEW = 2;
     private static final int TYPE_WEEK_VIEW = 3;
@@ -55,6 +61,8 @@ public abstract class BaseActivity extends AppCompatActivity implements WeekView
         // Set up a date time interpreter to interpret how the date and time will be formatted in
         // the week view. This is optional.
         setupDateTimeInterpreter(false);
+
+        mWeekView.setHeaderAdapter(this);
     }
 
 
@@ -158,6 +166,21 @@ public abstract class BaseActivity extends AppCompatActivity implements WeekView
     @Override
     public void onEmptyViewLongPress(Calendar time) {
         Toast.makeText(this, "Empty view long pressed: " + getEventTitle(time), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public View getHeader(Calendar date, View convertView) {
+        View view = convertView;
+        if (view == null) {
+            LayoutInflater inflater = LayoutInflater.from(this);
+            view = inflater.inflate(R.layout.layout_header, null);
+        }
+
+        TextView dateView = (TextView) view.findViewById(R.id.header_date);
+        TextView dayOfWeekView = (TextView) view.findViewById(R.id.header_day_of_week);
+        dateView.setText(String.format(Locale.US, "%d", date.get(Calendar.DAY_OF_MONTH)));
+        dayOfWeekView.setText(formatter.format(date.getTime()));
+        return view;
     }
 
     public WeekView getWeekView() {

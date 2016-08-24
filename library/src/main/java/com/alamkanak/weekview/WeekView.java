@@ -31,6 +31,7 @@ import android.view.ScaleGestureDetector;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.widget.OverScroller;
 
 import java.text.SimpleDateFormat;
@@ -62,7 +63,6 @@ public class WeekView extends View {
     private Paint mTimeTextPaint;
     private float mTimeTextWidth;
     private float mTimeTextHeight;
-    private Paint mHeaderTextPaint;
     private float mHeaderTextHeight;
     private float mHeaderHeight;
     private GestureDetectorCompat mGestureDetector;
@@ -152,8 +152,11 @@ public class WeekView extends View {
     private WeekViewLoader mWeekViewLoader;
     private EmptyViewClickListener mEmptyViewClickListener;
     private EmptyViewLongPressListener mEmptyViewLongPressListener;
-    private DateTimeInterpreter mDateTimeInterpreter;
     private ScrollListener mScrollListener;
+
+    private DateTimeInterpreter mDateTimeInterpreter;
+    private HeaderAdapter mHeaderAdapter;
+    private List<View> mHeaderViews;
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
 
@@ -380,15 +383,6 @@ public class WeekView extends View {
         mHeaderMarginBottom = mTimeTextHeight / 2;
         initTextTimeWidth();
 
-        // Measure settings for header row.
-        mHeaderTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mHeaderTextPaint.setColor(mHeaderColumnTextColor);
-        mHeaderTextPaint.setTextAlign(Paint.Align.CENTER);
-        mHeaderTextPaint.setTextSize(mTextSize);
-        mHeaderTextPaint.getTextBounds("00 PM", 0, "00 PM".length(), rect);
-        mHeaderTextHeight = rect.height();
-        mHeaderTextPaint.setTypeface(Typeface.DEFAULT_BOLD);
-
         // Prepare header background paint.
         mHeaderBackgroundPaint = new Paint();
         mHeaderBackgroundPaint.setColor(mHeaderRowBackgroundColor);
@@ -464,6 +458,9 @@ public class WeekView extends View {
                 return true;
             }
         });
+
+        mHeaderViews = new ArrayList<>(mNumberOfVisibleDays+1);
+
     }
 
     // fix rotation changes
@@ -488,6 +485,16 @@ public class WeekView extends View {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+
+    }
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
@@ -498,7 +505,7 @@ public class WeekView extends View {
         drawTimeColumnAndAxes(canvas);
     }
 
-    private void calculateHeaderHeight(){
+    private void calculateHeaderHeight() {
         //Make sure the header is the right size (depends on AllDay events)
         boolean containsAllDayEvent = false;
         if (mEventRects != null && mEventRects.size() > 0) {
@@ -519,6 +526,12 @@ public class WeekView extends View {
                 }
             }
         }
+
+        mHeaderTextHeight = 0;
+        for (View headerView: mHeaderViews) {
+            mHeaderTextHeight = Math.max(mHeaderTextHeight, headerView.getMeasuredHeight());
+        }
+
         if(containsAllDayEvent) {
             mHeaderHeight = mHeaderTextHeight + (mAllDayEventHeight + mHeaderMarginBottom);
         }
@@ -550,6 +563,15 @@ public class WeekView extends View {
         mHeaderColumnWidth = mTimeTextWidth + mHeaderColumnPadding *2;
         mWidthPerDay = getWidth() - mHeaderColumnWidth - mColumnGap * (mNumberOfVisibleDays - 1);
         mWidthPerDay = mWidthPerDay/mNumberOfVisibleDays;
+
+        //Get header views
+        //TODO: reuse existing views.
+        for (int i = 0; i < mNumberOfVisibleDays+1; i++) {
+            //TODO: set appropriate dates.
+            View headerView = mHeaderAdapter.getHeader(today(), null);
+            headerView.measure(MeasureSpec.makeMeasureSpec((int)Math.floor(mWidthPerDay), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+            mHeaderViews.add(headerView);
+        }
 
         calculateHeaderHeight(); //Make sure the header is the right size (depends on AllDay events)
 
@@ -732,10 +754,19 @@ public class WeekView extends View {
             boolean sameDay = isSameDay(day, today);
 
             // Draw the day labels.
-            String dayLabel = getDateTimeInterpreter().interpretDate(day);
-            if (dayLabel == null)
-                throw new IllegalStateException("A DateTimeInterpreter must not return null date");
-            canvas.drawText(dayLabel, startPixel + mWidthPerDay / 2, mHeaderTextHeight + mHeaderRowPadding, sameDay ? mTodayHeaderTextPaint : mHeaderTextPaint);
+            //String dayLabel = getDateTimeInterpreter().interpretDate(day);
+            //if (dayLabel == null)
+            //    throw new IllegalStateException("A DateTimeInterpreter must not return null date");
+            //canvas.drawText(dayLabel, startPixel + mWidthPerDay / 2, mHeaderTextHeight + mHeaderRowPadding, sameDay ? mTodayHeaderTextPaint : mHeaderTextPaint);
+            View headerView = mHeaderViews.get(dayNumber - leftDaysWithGaps-1);
+            //headerView.layout(startPixel, )
+            //headerView.layout((int)startPixel)
+            //canvas.clipRect()
+            canvas.save();
+            canvas.translate(startPixel, 0);
+            headerView.layout(0, 0, headerView.getMeasuredWidth(), headerView.getMeasuredHeight());
+            headerView.draw(canvas);
+            canvas.restore();
             drawAllDayEvents(day, startPixel, canvas);
             startPixel += mWidthPerDay + mColumnGap;
         }
@@ -829,7 +860,7 @@ public class WeekView extends View {
                 if (isSameDay(mEventRects.get(i).event.getStartTime(), date) && mEventRects.get(i).event.isAllDay()){
 
                     // Calculate top.
-                    float top = mHeaderRowPadding * 2 + mHeaderMarginBottom +  + mTimeTextHeight/2 + mEventMarginVertical;
+                    float top = mHeaderRowPadding * 2 + mHeaderMarginBottom + mHeaderTextHeight + mEventMarginVertical;
 
                     // Calculate bottom.
                     float bottom = top + mEventRects.get(i).bottom;
@@ -1342,6 +1373,14 @@ public class WeekView extends View {
     }
 
 
+    public HeaderAdapter getHeaderAdapter() {
+        return mHeaderAdapter;
+    }
+
+    public void setHeaderAdapter(HeaderAdapter adapter) {
+        mHeaderAdapter = adapter;
+    }
+
     /**
      * Get the number of visible days in a week.
      * @return The number of visible days in a week.
@@ -1358,6 +1397,7 @@ public class WeekView extends View {
         this.mNumberOfVisibleDays = numberOfVisibleDays;
         mCurrentOrigin.x = 0;
         mCurrentOrigin.y = 0;
+        mHeaderViews = new ArrayList<>(mNumberOfVisibleDays+1);
         invalidate();
     }
 
@@ -1415,7 +1455,8 @@ public class WeekView extends View {
     public void setTextSize(int textSize) {
         mTextSize = textSize;
         mTodayHeaderTextPaint.setTextSize(mTextSize);
-        mHeaderTextPaint.setTextSize(mTextSize);
+        //TODO: rewrite using HeaderAdapter
+        // mHeaderTextPaint.setTextSize(mTextSize);
         mTimeTextPaint.setTextSize(mTextSize);
         invalidate();
     }
@@ -1435,7 +1476,8 @@ public class WeekView extends View {
 
     public void setHeaderColumnTextColor(int headerColumnTextColor) {
         mHeaderColumnTextColor = headerColumnTextColor;
-        mHeaderTextPaint.setColor(mHeaderColumnTextColor);
+        //TODO: rewrite using HeaderAdapter
+        // mHeaderTextPaint.setColor(mHeaderColumnTextColor);
         mTimeTextPaint.setColor(mHeaderColumnTextColor);
         invalidate();
     }
@@ -2037,5 +2079,18 @@ public class WeekView extends View {
          * @param oldFirstVisibleDay The old first visible day (is null on the first call).
          */
         void onFirstVisibleDayChanged(Calendar newFirstVisibleDay, Calendar oldFirstVisibleDay);
+    }
+
+    /**
+     *
+     */
+    public interface HeaderAdapter {
+
+        /**
+         * @param date that header should display
+         * @param convertView if not null this view can be reused and populated with new head data.
+         * @return view with custom header.
+         */
+        View getHeader(Calendar date, View convertView);
     }
 }
