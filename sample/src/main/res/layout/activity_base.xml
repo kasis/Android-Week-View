@@ -15,7 +15,7 @@
         app:hourHeight="60dp"
         app:headerColumnPadding="8dp"
         app:headerColumnTextColor="@color/toolbar_text"
-        app:headerRowPadding="12dp"
+        app:headerRowPadding="2dp"
         app:columnGap="8dp"
         app:noOfVisibleDays="3"
         app:headerRowBackgroundColor="@color/toolbar"

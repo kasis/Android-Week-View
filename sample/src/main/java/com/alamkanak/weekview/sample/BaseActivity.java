@@ -11,7 +11,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.alamkanak.weekview.DateTimeInterpreter;
+import com.alamkanak.weekview.TimeInterpreter;
 import com.alamkanak.weekview.MonthLoader;
 import com.alamkanak.weekview.WeekView;
 import com.alamkanak.weekview.WeekViewEvent;
@@ -26,7 +26,7 @@ import java.util.Locale;
  * Created by Raquib-ul-Alam Kanak on 1/3/2014.
  * Website: http://alamkanak.github.io
  */
-public abstract class BaseActivity extends AppCompatActivity implements WeekView.EventClickListener, MonthLoader.MonthChangeListener, WeekView.EventLongPressListener, WeekView.EmptyViewLongPressListener, WeekView.HeaderAdapter {
+public abstract class BaseActivity extends AppCompatActivity implements WeekView.EventClickListener, MonthLoader.MonthChangeListener, WeekView.EventLongPressListener, WeekView.EmptyViewLongPressListener, WeekView.HeaderAdapter<BaseActivity.HeaderViewHolder> {
 
     final static SimpleDateFormat formatter = new SimpleDateFormat("EEE", Locale.US);
 
@@ -127,20 +127,7 @@ public abstract class BaseActivity extends AppCompatActivity implements WeekView
      * @param shortDate True if the date values should be short.
      */
     private void setupDateTimeInterpreter(final boolean shortDate) {
-        mWeekView.setDateTimeInterpreter(new DateTimeInterpreter() {
-            @Override
-            public String interpretDate(Calendar date) {
-                SimpleDateFormat weekdayNameFormat = new SimpleDateFormat("EEE", Locale.getDefault());
-                String weekday = weekdayNameFormat.format(date.getTime());
-                SimpleDateFormat format = new SimpleDateFormat(" M/d", Locale.getDefault());
-
-                // All android api level do not have a standard way of getting the first letter of
-                // the week day name. Hence we get the first char programmatically.
-                // Details: http://stackoverflow.com/questions/16959502/get-one-letter-abbreviation-of-week-day-of-a-date-in-java#answer-16959657
-                if (shortDate)
-                    weekday = String.valueOf(weekday.charAt(0));
-                return weekday.toUpperCase() + format.format(date.getTime());
-            }
+        mWeekView.setTimeInterpreter(new TimeInterpreter() {
 
             @Override
             public String interpretTime(int hour) {
@@ -169,18 +156,38 @@ public abstract class BaseActivity extends AppCompatActivity implements WeekView
     }
 
     @Override
-    public View getHeader(Calendar date, View convertView) {
-        View view = convertView;
-        if (view == null) {
+    public HeaderViewHolder getHeader(Calendar date, HeaderViewHolder convertView) {
+        HeaderViewHolder holder = convertView;
+        if (holder == null) {
             LayoutInflater inflater = LayoutInflater.from(this);
-            view = inflater.inflate(R.layout.layout_header, null);
+            View view = inflater.inflate(R.layout.layout_header, null);
+            holder = new HeaderViewHolder(view);
+        }
+        holder.showDate(date);
+        return holder;
+    }
+
+    public static class HeaderViewHolder implements WeekView.ViewHolder {
+
+        View mView;
+        TextView mDateView;
+        TextView mDayOfWeekView;
+
+        public HeaderViewHolder(View view) {
+            mView = view;
+            mDateView = (TextView) view.findViewById(R.id.header_date);
+            mDayOfWeekView = (TextView) view.findViewById(R.id.header_day_of_week);
         }
 
-        TextView dateView = (TextView) view.findViewById(R.id.header_date);
-        TextView dayOfWeekView = (TextView) view.findViewById(R.id.header_day_of_week);
-        dateView.setText(String.format(Locale.US, "%d", date.get(Calendar.DAY_OF_MONTH)));
-        dayOfWeekView.setText(formatter.format(date.getTime()));
-        return view;
+        public void showDate(Calendar date) {
+            mDateView.setText(String.format(Locale.US, "%d", date.get(Calendar.DAY_OF_MONTH)));
+            mDayOfWeekView.setText(formatter.format(date.getTime()));
+        }
+
+        @Override
+        public View getView() {
+            return mView;
+        }
     }
 
     public WeekView getWeekView() {
