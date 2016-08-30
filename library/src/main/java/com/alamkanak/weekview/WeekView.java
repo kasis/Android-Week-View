@@ -682,7 +682,7 @@ public class WeekView extends View {
 
             // Check if the day is today.
             day = (Calendar) today.clone();
-            day.add(Calendar.DATE, dayNumber - 1);
+            day.add(Calendar.DATE, dayNumber);
             boolean sameDay = isSameDay(day, today);
 
             // Get more events if necessary. We want to store the events 3 months beforehand. Get
@@ -696,27 +696,24 @@ public class WeekView extends View {
 
             // Draw background color for each day.
             float start =  (startPixel < mHeaderColumnWidth ? mHeaderColumnWidth : startPixel);
-            if (mWidthPerDay + startPixel - start > 0){
+            if (mWidthPerDay + startPixel - start > 0) {
                 if (mShowDistinctPastFutureColor){
                     boolean isWeekend = day.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || day.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY;
                     Paint pastPaint = isWeekend && mShowDistinctWeekendColor ? mPastWeekendBackgroundPaint : mPastBackgroundPaint;
                     Paint futurePaint = isWeekend && mShowDistinctWeekendColor ? mFutureWeekendBackgroundPaint : mFutureBackgroundPaint;
                     float startY = mHeaderHeight + mHeaderRowPadding * 2 + mTimeTextHeight/2 + mHeaderMarginBottom + mCurrentOrigin.y;
 
-                    if (sameDay){
+                    if (sameDay) {
                         Calendar now = Calendar.getInstance();
                         float beforeNow = (now.get(Calendar.HOUR_OF_DAY) + now.get(Calendar.MINUTE)/60.0f) * mHourHeight;
                         canvas.drawRect(start, startY, startPixel + mWidthPerDay, startY+beforeNow, pastPaint);
                         canvas.drawRect(start, startY+beforeNow, startPixel + mWidthPerDay, getHeight(), futurePaint);
-                    }
-                    else if (day.before(today)) {
+                    } else if (day.before(today)) {
                         canvas.drawRect(start, startY, startPixel + mWidthPerDay, getHeight(), pastPaint);
-                    }
-                    else {
+                    } else {
                         canvas.drawRect(start, startY, startPixel + mWidthPerDay, getHeight(), futurePaint);
                     }
-                }
-                else {
+                } else {
                     canvas.drawRect(start, mHeaderHeight + mHeaderRowPadding * 2 + mTimeTextHeight / 2 + mHeaderMarginBottom, startPixel + mWidthPerDay, getHeight(), sameDay ? mTodayBackgroundPaint : mDayBackgroundPaint);
                 }
             }
@@ -768,13 +765,11 @@ public class WeekView extends View {
             // Check if the day is today.
             day = (Calendar) today.clone();
             day.add(Calendar.DATE, dayNumber);
-            boolean sameDay = isSameDay(day, today);
-
-            View headerView = mDateViewHolders.get(getHolderIndex(dayNumber)).getView();
+            View dateView = mDateViewHolders.get(getHolderIndex(dayNumber)).getView();
             canvas.save();
             canvas.translate(startPixel, 0);
-            headerView.layout(0, 0, headerView.getMeasuredWidth(), headerView.getMeasuredHeight());
-            headerView.draw(canvas);
+            dateView.layout(0, 0, dateView.getMeasuredWidth(), dateView.getMeasuredHeight());
+            dateView.draw(canvas);
             canvas.restore();
             drawAllDayEvents(day, startPixel, canvas);
             startPixel += mWidthPerDay + mColumnGap;

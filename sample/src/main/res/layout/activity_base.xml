@@ -18,6 +18,8 @@
         app:headerRowPadding="2dp"
         app:columnGap="8dp"
         app:noOfVisibleDays="7"
+        app:firstDayOfWeek="monday"
+        app:showFirstDayOfWeekFirst="true"
         app:headerRowBackgroundColor="@color/toolbar"
         app:dayBackgroundColor="#05000000"
         app:todayBackgroundColor="#1848adff"
