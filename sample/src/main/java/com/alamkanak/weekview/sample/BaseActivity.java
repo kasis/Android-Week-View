@@ -2,6 +2,7 @@ package com.alamkanak.weekview.sample;
 
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -26,7 +27,7 @@ import java.util.Locale;
  * Created by Raquib-ul-Alam Kanak on 1/3/2014.
  * Website: http://alamkanak.github.io
  */
-public abstract class BaseActivity extends AppCompatActivity implements WeekView.EventClickListener, MonthLoader.MonthChangeListener, WeekView.EventLongPressListener, WeekView.EmptyViewLongPressListener, WeekView.HeaderAdapter<BaseActivity.HeaderViewHolder> {
+public abstract class BaseActivity extends AppCompatActivity implements WeekView.EventClickListener, MonthLoader.MonthChangeListener, WeekView.EventLongPressListener, WeekView.EmptyViewLongPressListener, WeekView.DateViewProvider<BaseActivity.HeaderViewHolder> {
 
     final static SimpleDateFormat formatter = new SimpleDateFormat("EEE", Locale.US);
 
@@ -62,7 +63,7 @@ public abstract class BaseActivity extends AppCompatActivity implements WeekView
         // the week view. This is optional.
         setupDateTimeInterpreter(false);
 
-        mWeekView.setHeaderAdapter(this);
+        mWeekView.setDateViewProvider(this);
     }
 
 
@@ -155,8 +156,9 @@ public abstract class BaseActivity extends AppCompatActivity implements WeekView
         Toast.makeText(this, "Empty view long pressed: " + getEventTitle(time), Toast.LENGTH_SHORT).show();
     }
 
+    @NonNull
     @Override
-    public HeaderViewHolder getHeader(Calendar date, HeaderViewHolder convertView) {
+    public HeaderViewHolder getView(Calendar date, HeaderViewHolder convertView) {
         HeaderViewHolder holder = convertView;
         if (holder == null) {
             LayoutInflater inflater = LayoutInflater.from(this);

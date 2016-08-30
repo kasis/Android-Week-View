@@ -66,7 +66,7 @@ public class WeekView extends View {
     private Paint mTimeTextPaint;
     private float mTimeTextWidth;
     private float mTimeTextHeight;
-    private float mHeaderTextHeight;
+    private float mHeaderDateViewHeight;
     private float mHeaderHeight;
     private GestureDetectorCompat mGestureDetector;
     private OverScroller mScroller;
@@ -158,8 +158,8 @@ public class WeekView extends View {
     private ScrollListener mScrollListener;
 
     private TimeInterpreter mTimeInterpreter;
-    private HeaderAdapter<? extends ViewHolder> mHeaderAdapter;
-    private List<ViewHolder> mHeaderViews;
+    private DateViewProvider<? extends ViewHolder> mDateViewProvider;
+    private List<ViewHolder> mDateViewHolders;
 
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
@@ -463,8 +463,16 @@ public class WeekView extends View {
             }
         });
 
-        mHeaderViews = new ArrayList<>(mNumberOfVisibleDays+1);
+        createDateViewHolders();
 
+    }
+
+    void createDateViewHolders() {
+        int size = 2*(mNumberOfVisibleDays+1);
+        mDateViewHolders = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            mDateViewHolders.add(null);
+        }
     }
 
     // fix rotation changes
@@ -531,16 +539,18 @@ public class WeekView extends View {
             }
         }
 
-        mHeaderTextHeight = 0;
-        for (ViewHolder headerView: mHeaderViews) {
-            mHeaderTextHeight = Math.max(mHeaderTextHeight, headerView.getView().getMeasuredHeight());
+        mHeaderDateViewHeight = 0;
+        for (ViewHolder headerView: mDateViewHolders) {
+            if (headerView != null) {
+                mHeaderDateViewHeight = Math.max(mHeaderDateViewHeight, headerView.getView().getMeasuredHeight());
+            }
         }
 
         if(containsAllDayEvent) {
-            mHeaderHeight = mHeaderTextHeight + (mAllDayEventHeight + mHeaderMarginBottom);
+            mHeaderHeight = mHeaderDateViewHeight + (mAllDayEventHeight + mHeaderMarginBottom);
         }
         else{
-            mHeaderHeight = mHeaderTextHeight;
+            mHeaderHeight = mHeaderDateViewHeight;
         }
     }
 
@@ -587,15 +597,14 @@ public class WeekView extends View {
                 mHeaderColumnWidth;
         float startPixel = startFromPixel;
 
-        //Get header views
-        //TODO: reuse existing views.
-        mHeaderViews.clear();
-        for (int i = dateOffset; i < dateOffset + mNumberOfVisibleDays+1; i++) {
+        //Get date views
+        for (int i = dateOffset; i <= dateOffset + mNumberOfVisibleDays; i++) {
             Calendar day = (Calendar) today.clone();
             day.add(Calendar.DATE, i);
-            ViewHolder holder = getHeaderAdapter().getHeader(day, null);
+            //Try to reuse previously created date views.
+            ViewHolder holder = getDateViewProvider().getView(day, mDateViewHolders.get(getHolderIndex(i)));
             holder.getView().measure(MeasureSpec.makeMeasureSpec((int)Math.floor(mWidthPerDay), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-            mHeaderViews.add(holder);
+            mDateViewHolders.set(getHolderIndex(i), holder);
         }
 
         calculateHeaderHeight(); //Make sure the header is the right size (depends on AllDay events)
@@ -661,25 +670,26 @@ public class WeekView extends View {
         // Iterate through each day.
         Calendar oldFirstVisibleDay = mFirstVisibleDay;
         mFirstVisibleDay = (Calendar) today.clone();
-        mFirstVisibleDay.add(Calendar.DATE, -(Math.round(mCurrentOrigin.x / (mWidthPerDay + mColumnGap))));
+        mFirstVisibleDay.add(Calendar.DATE, dateOffset);
         if(!mFirstVisibleDay.equals(oldFirstVisibleDay) && mScrollListener != null){
             mScrollListener.onFirstVisibleDayChanged(mFirstVisibleDay, oldFirstVisibleDay);
         }
-        for (int dayNumber = dateOffset + 1;
-             dayNumber <= dateOffset + mNumberOfVisibleDays + 1;
+        mLastVisibleDay = (Calendar) mFirstVisibleDay.clone();
+        mLastVisibleDay.add(Calendar.DATE, mNumberOfVisibleDays);
+
+        for (int dayNumber = dateOffset;
+             dayNumber <= dateOffset + mNumberOfVisibleDays;
              dayNumber++) {
 
             // Check if the day is today.
             day = (Calendar) today.clone();
-            mLastVisibleDay = (Calendar) day.clone();
             day.add(Calendar.DATE, dayNumber - 1);
-            mLastVisibleDay.add(Calendar.DATE, dayNumber - 2);
             boolean sameDay = isSameDay(day, today);
 
             // Get more events if necessary. We want to store the events 3 months beforehand. Get
             // events only when it is the first iteration of the loop.
             if (mEventRects == null || mRefreshEvents ||
-                    (dayNumber == dateOffset + 1 && mFetchedPeriod != (int) mWeekViewLoader.toWeekViewPeriodIndex(day) &&
+                    (dayNumber == dateOffset && mFetchedPeriod != (int) mWeekViewLoader.toWeekViewPeriodIndex(day) &&
                             Math.abs(mFetchedPeriod - mWeekViewLoader.toWeekViewPeriodIndex(day)) > 0.5)) {
                 getMoreEvents(day);
                 mRefreshEvents = false;
@@ -755,13 +765,13 @@ public class WeekView extends View {
 
         // Draw the header row texts.
         startPixel = startFromPixel;
-        for (int dayNumber=dateOffset+1; dayNumber <= dateOffset + mNumberOfVisibleDays + 1; dayNumber++) {
+        for (int dayNumber=dateOffset; dayNumber <= dateOffset + mNumberOfVisibleDays; dayNumber++) {
             // Check if the day is today.
             day = (Calendar) today.clone();
-            day.add(Calendar.DATE, dayNumber - 1);
+            day.add(Calendar.DATE, dayNumber);
             boolean sameDay = isSameDay(day, today);
 
-            View headerView = mHeaderViews.get(dayNumber - dateOffset-1).getView();
+            View headerView = mDateViewHolders.get(getHolderIndex(dayNumber)).getView();
             canvas.save();
             canvas.translate(startPixel, 0);
             headerView.layout(0, 0, headerView.getMeasuredWidth(), headerView.getMeasuredHeight());
@@ -849,6 +859,16 @@ public class WeekView extends View {
     }
 
     /**
+     *
+     * @param dateOffset - offset of the day to display measured in days sinde current date
+     * @return index in the {@link WeekView#mDateViewHolders} array.
+     */
+    int getHolderIndex(int dateOffset) {
+        int s = mDateViewHolders.size();
+        return (dateOffset % s + s) % s;
+
+    }
+    /**
      * Draw all the Allday-events of a particular day.
      * @param date The day.
      * @param startFromPixel The left position of the day area. The events will never go any left from this value.
@@ -860,7 +880,7 @@ public class WeekView extends View {
                 if (isSameDay(mEventRects.get(i).event.getStartTime(), date) && mEventRects.get(i).event.isAllDay()){
 
                     // Calculate top.
-                    float top = mHeaderRowPadding * 2 + mHeaderMarginBottom + mHeaderTextHeight + mEventMarginVertical;
+                    float top = mHeaderRowPadding * 2 + mHeaderMarginBottom + mHeaderDateViewHeight + mEventMarginVertical;
 
                     // Calculate bottom.
                     float bottom = top + mEventRects.get(i).bottom;
@@ -1362,15 +1382,15 @@ public class WeekView extends View {
     }
 
 
-    public HeaderAdapter getHeaderAdapter() {
-        if (mHeaderAdapter == null) {
-            mHeaderAdapter = new SimpleDateAdapter(getContext(), DEFAULT_DATE_FORMAT);
+    public DateViewProvider getDateViewProvider() {
+        if (mDateViewProvider == null) {
+            mDateViewProvider = new SimpleDateViewProvider(getContext(), DEFAULT_DATE_FORMAT);
         }
-        return mHeaderAdapter;
+        return mDateViewProvider;
     }
 
-    public void setHeaderAdapter(HeaderAdapter adapter) {
-        mHeaderAdapter = adapter;
+    public void setDateViewProvider(DateViewProvider adapter) {
+        mDateViewProvider = adapter;
     }
 
     /**
@@ -1389,7 +1409,7 @@ public class WeekView extends View {
         this.mNumberOfVisibleDays = numberOfVisibleDays;
         mCurrentOrigin.x = 0;
         mCurrentOrigin.y = 0;
-        mHeaderViews = new ArrayList<>(mNumberOfVisibleDays+1);
+        createDateViewHolders();
         invalidate();
     }
 
@@ -1447,8 +1467,6 @@ public class WeekView extends View {
     public void setTextSize(int textSize) {
         mTextSize = textSize;
         mTodayHeaderTextPaint.setTextSize(mTextSize);
-        //TODO: rewrite using HeaderAdapter
-        // mHeaderTextPaint.setTextSize(mTextSize);
         mTimeTextPaint.setTextSize(mTextSize);
         invalidate();
     }
@@ -1468,8 +1486,6 @@ public class WeekView extends View {
 
     public void setHeaderColumnTextColor(int headerColumnTextColor) {
         mHeaderColumnTextColor = headerColumnTextColor;
-        //TODO: rewrite using HeaderAdapter
-        // mHeaderTextPaint.setColor(mHeaderColumnTextColor);
         mTimeTextPaint.setColor(mHeaderColumnTextColor);
         invalidate();
     }
@@ -1932,7 +1948,6 @@ public class WeekView extends View {
         }
     }
 
-
     /////////////////////////////////////////////////////////////////
     //
     //      Public methods.
@@ -2074,31 +2089,19 @@ public class WeekView extends View {
     }
 
     /**
-     * Adapter that provides views that will be displayed in the header row
+     * Adapter that provides custom date views.
      */
-    public interface HeaderAdapter<T extends ViewHolder> {
+    public interface DateViewProvider<T extends ViewHolder> {
 
         /**
          * @param date that header should display
          * @param convertView if not null this {@link ViewHolder} can be reused and populated with new data.
          * @return {@link ViewHolder} with custom header.
          */
-        @NonNull T getHeader(Calendar date, @Nullable T convertView);
+        @NonNull T getView(Calendar date, @Nullable T convertView);
 
     }
 
-    /**
-     * Adapter that provides time label views.
-     */
-    public interface TimeLabelAdapter<T extends ViewHolder> {
-
-        /**
-         * @param time that should be displayed
-         * @param convertView if not null this {@link ViewHolder} can be reused and populated with new data.
-         * @return {@link ViewHolder} with custom time label.
-         */
-        @NonNull T getLabel(Calendar time, @Nullable T convertView);
-    }
     public interface ViewHolder {
 
         /**

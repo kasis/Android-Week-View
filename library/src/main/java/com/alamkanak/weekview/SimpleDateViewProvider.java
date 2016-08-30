@@ -9,22 +9,22 @@ import java.text.DateFormat;
 import java.util.Calendar;
 
 /**
- * Simple {@link com.alamkanak.weekview.WeekView.HeaderAdapter} that displays date as a {@link TextView}
+ * Simple {@link WeekView.DateViewProvider} that displays date as a {@link TextView}
  * in the specified format.
  */
-public class SimpleDateAdapter implements WeekView.HeaderAdapter<SimpleDateAdapter.DateHolder> {
+public class SimpleDateViewProvider implements WeekView.DateViewProvider<SimpleDateViewProvider.DateHolder> {
 
     Context mContext;
     DateFormat mDateFormat;
 
-    public SimpleDateAdapter(Context context, DateFormat dateFormat) {
+    public SimpleDateViewProvider(Context context, DateFormat dateFormat) {
         mDateFormat = dateFormat;
         mContext = context;
     }
 
     @NonNull
     @Override
-    public DateHolder getHeader(Calendar date, @Nullable DateHolder convertView) {
+    public DateHolder getView(Calendar date, @Nullable DateHolder convertView) {
         DateHolder holder = convertView;
         if (convertView == null) {
             holder = new DateHolder(new TextView(mContext));
