@@ -166,7 +166,6 @@ public class WeekView extends View {
 
         @Override
         public boolean onDown(MotionEvent e) {
-            goToNearestOrigin();
             return true;
         }
 
@@ -1884,30 +1883,41 @@ public class WeekView extends View {
         return val;
     }
 
-    private void goToNearestOrigin(){
-        double leftDays = mCurrentOrigin.x / (mWidthPerDay + mColumnGap);
-
+    private void goToNearestOrigin() {
+        int leftDays;
+        double leftDaysDouble = mCurrentOrigin.x / (mWidthPerDay + mColumnGap);
         if (mCurrentFlingDirection != Direction.NONE) {
             // snap to nearest day
-            leftDays = Math.round(leftDays);
+            leftDays = (int) Math.round(leftDaysDouble);
         } else if (mCurrentScrollDirection == Direction.LEFT) {
             // snap to last day
-            leftDays = Math.floor(leftDays);
+            leftDays = (int) Math.floor(leftDaysDouble);
         } else if (mCurrentScrollDirection == Direction.RIGHT) {
             // snap to next day
-            leftDays = Math.ceil(leftDays);
+            leftDays = (int) Math.ceil(leftDaysDouble);
         } else {
             // snap to nearest day
-            leftDays = Math.round(leftDays);
+            leftDays = (int) Math.round(leftDaysDouble);
         }
 
-        int nearestOrigin = (int) (mCurrentOrigin.x - leftDays * (mWidthPerDay + mColumnGap));
+        int toNext = leftDays % mNumberOfVisibleDays;
+        if (toNext > 0 && toNext >= mNumberOfVisibleDays / 2) {
+            toNext = mNumberOfVisibleDays - toNext;
+        } else if (toNext > 0 && toNext < mNumberOfVisibleDays / 2) {
+            toNext = -toNext;
+        } else if (toNext < 0 && -toNext > mNumberOfVisibleDays / 2) {
+            toNext = -mNumberOfVisibleDays - toNext;
+        } else {
+            toNext = -toNext;
+        }
+        leftDays += toNext == mNumberOfVisibleDays ? 0 : toNext;
+        int distToNearestOrigin = (int) (mCurrentOrigin.x - leftDays * (mWidthPerDay + mColumnGap));
 
-        if (nearestOrigin != 0) {
+        if (distToNearestOrigin != 0) {
             // Stop current animation.
             mScroller.forceFinished(true);
             // Snap to date.
-            mScroller.startScroll((int) mCurrentOrigin.x, (int) mCurrentOrigin.y, -nearestOrigin, 0, (int) (Math.abs(nearestOrigin) / mWidthPerDay * mScrollDuration));
+            mScroller.startScroll((int) mCurrentOrigin.x, (int) mCurrentOrigin.y, -distToNearestOrigin, 0, (int) (Math.abs(distToNearestOrigin) / mWidthPerDay * mScrollDuration / 10));
             ViewCompat.postInvalidateOnAnimation(WeekView.this);
         }
         // Reset scrolling and fling direction.
