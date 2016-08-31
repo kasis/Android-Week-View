@@ -161,6 +161,7 @@ public class WeekView extends View {
     private DateViewProvider<? extends ViewHolder> mDateViewProvider;
     private List<ViewHolder> mDateViewHolders;
 
+    private Calendar mCurrentDate; //date is used as today. Can be injected for testing purposes.
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
 
@@ -704,7 +705,7 @@ public class WeekView extends View {
                     float startY = mHeaderHeight + mHeaderRowPadding * 2 + mTimeTextHeight/2 + mHeaderMarginBottom + mCurrentOrigin.y;
 
                     if (sameDay) {
-                        Calendar now = Calendar.getInstance();
+                        Calendar now = getCurrentDate();
                         float beforeNow = (now.get(Calendar.HOUR_OF_DAY) + now.get(Calendar.MINUTE)/60.0f) * mHourHeight;
                         canvas.drawRect(start, startY, startPixel + mWidthPerDay, startY+beforeNow, pastPaint);
                         canvas.drawRect(start, startY+beforeNow, startPixel + mWidthPerDay, getHeight(), futurePaint);
@@ -740,7 +741,7 @@ public class WeekView extends View {
             // Draw the line at the current time.
             if (mShowNowLine && sameDay){
                 float startY = mHeaderHeight + mHeaderRowPadding * 2 + mTimeTextHeight/2 + mHeaderMarginBottom + mCurrentOrigin.y;
-                Calendar now = Calendar.getInstance();
+                Calendar now = getCurrentDate();
                 float beforeNow = (now.get(Calendar.HOUR_OF_DAY) + now.get(Calendar.MINUTE)/60.0f) * mHourHeight;
                 canvas.drawLine(start, startY + beforeNow, startPixel + mWidthPerDay, startY + beforeNow, mNowLinePaint);
             }
@@ -1347,7 +1348,7 @@ public class WeekView extends View {
             mTimeInterpreter = new TimeInterpreter() {
                 @Override
                 public String interpretTime(int hour) {
-                    Calendar calendar = Calendar.getInstance();
+                    Calendar calendar = getCurrentDate();
                     calendar.set(Calendar.HOUR_OF_DAY, hour);
                     calendar.set(Calendar.MINUTE, 0);
 
@@ -1856,6 +1857,14 @@ public class WeekView extends View {
         mScrollDuration = scrollDuration;
     }
 
+    public Calendar getCurrentDate() {
+        return mCurrentDate == null ? Calendar.getInstance() : mCurrentDate;
+    }
+
+    public void setCurrentDate(Calendar currentDate) {
+        mCurrentDate = currentDate;
+    }
+
     /////////////////////////////////////////////////////////////////
     //
     //      Functions related to scrolling.
@@ -1963,7 +1972,7 @@ public class WeekView extends View {
      * Show today on the week view.
      */
     public void goToToday() {
-        Calendar today = Calendar.getInstance();
+        Calendar today = getCurrentDate();
         goToDate(today);
     }
 
@@ -1987,7 +1996,7 @@ public class WeekView extends View {
 
         mRefreshEvents = true;
 
-        Calendar today = Calendar.getInstance();
+        Calendar today = getCurrentDate();
         today.set(Calendar.HOUR_OF_DAY, 0);
         today.set(Calendar.MINUTE, 0);
         today.set(Calendar.SECOND, 0);
