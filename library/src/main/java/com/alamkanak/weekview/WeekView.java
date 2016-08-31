@@ -161,7 +161,7 @@ public class WeekView extends View {
     private DateViewProvider<? extends ViewHolder> mDateViewProvider;
     private List<ViewHolder> mDateViewHolders;
 
-    private Calendar mCurrentDate; //date is used as today. Can be injected for testing purposes.
+    private Calendar mCurrentDate; //date is used as extractDate. Can be injected for testing purposes.
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
 
@@ -414,11 +414,11 @@ public class WeekView extends View {
         mNowLinePaint.setStrokeWidth(mNowLineThickness);
         mNowLinePaint.setColor(mNowLineColor);
 
-        // Prepare today background color paint.
+        // Prepare extractDate background color paint.
         mTodayBackgroundPaint = new Paint();
         mTodayBackgroundPaint.setColor(mTodayBackgroundColor);
 
-        // Prepare today header text color paint.
+        // Prepare extractDate header text color paint.
         mTodayHeaderTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mTodayHeaderTextPaint.setTextAlign(Paint.Align.CENTER);
         mTodayHeaderTextPaint.setTextSize(mTextSize);
@@ -578,7 +578,7 @@ public class WeekView extends View {
         mWidthPerDay = getWidth() - mHeaderColumnWidth - mColumnGap * (mNumberOfVisibleDays - 1);
         mWidthPerDay = mWidthPerDay/mNumberOfVisibleDays;
 
-        Calendar today = today();
+        Calendar today = extractDate(getCurrentDate());
 
         if (mIsFirstDraw) {
             mIsFirstDraw = false;
@@ -681,7 +681,7 @@ public class WeekView extends View {
              dayNumber <= dateOffset + mNumberOfVisibleDays;
              dayNumber++) {
 
-            // Check if the day is today.
+            // Check if the day is extractDate.
             day = (Calendar) today.clone();
             day.add(Calendar.DATE, dayNumber);
             boolean sameDay = isSameDay(day, today);
@@ -763,7 +763,7 @@ public class WeekView extends View {
         // Draw the header row texts.
         startPixel = startFromPixel;
         for (int dayNumber=dateOffset; dayNumber <= dateOffset + mNumberOfVisibleDays; dayNumber++) {
-            // Check if the day is today.
+            // Check if the day is extractDate.
             day = (Calendar) today.clone();
             day.add(Calendar.DATE, dayNumber);
             View dateView = mDateViewHolders.get(getHolderIndex(dayNumber)).getView();
@@ -793,7 +793,7 @@ public class WeekView extends View {
              dayNumber++) {
             float start =  (startPixel < mHeaderColumnWidth ? mHeaderColumnWidth : startPixel);
             if (mWidthPerDay + startPixel - start > 0 && x > start && x < startPixel + mWidthPerDay){
-                Calendar day = today();
+                Calendar day = extractDate(getCurrentDate());
                 day.add(Calendar.DATE, dayNumber - 1);
                 float pixelsFromZero = y - mCurrentOrigin.y - mHeaderHeight
                         - mHeaderRowPadding * 2 - mTimeTextHeight/2 - mHeaderMarginBottom;
@@ -1969,7 +1969,7 @@ public class WeekView extends View {
     /////////////////////////////////////////////////////////////////
 
     /**
-     * Show today on the week view.
+     * Show extractDate on the week view.
      */
     public void goToToday() {
         Calendar today = getCurrentDate();

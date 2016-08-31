@@ -63,7 +63,11 @@ public abstract class BaseActivity extends AppCompatActivity implements WeekView
         // the week view. This is optional.
         setupDateTimeInterpreter(false);
 
-       // mWeekView.setDateViewProvider(this);
+        mWeekView.setDateViewProvider(this);
+
+        Calendar today = Calendar.getInstance();
+        today.add(Calendar.DAY_OF_MONTH, -1);
+        mWeekView.setCurrentDate(today);
     }
 
 

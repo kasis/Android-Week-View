@@ -28,8 +28,8 @@ public class WeekViewUtil {
      * Returns a calendar instance at the start of this day
      * @return the calendar instance
      */
-    public static Calendar today(){
-        Calendar today = Calendar.getInstance();
+    public static Calendar extractDate(Calendar date) {
+        Calendar today = (Calendar) date.clone();
         today.set(Calendar.HOUR_OF_DAY, 0);
         today.set(Calendar.MINUTE, 0);
         today.set(Calendar.SECOND, 0);
