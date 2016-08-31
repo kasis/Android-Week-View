@@ -1895,17 +1895,17 @@ public class WeekView extends View {
             leftDays = (int) Math.round(leftDaysDouble);
         }
 
-        int toNext = leftDays % mNumberOfVisibleDays;
-        if (toNext > 0 && toNext >= mNumberOfVisibleDays / 2) {
-            toNext = mNumberOfVisibleDays - toNext;
-        } else if (toNext > 0 && toNext < mNumberOfVisibleDays / 2) {
-            toNext = -toNext;
-        } else if (toNext < 0 && -toNext > mNumberOfVisibleDays / 2) {
-            toNext = -mNumberOfVisibleDays - toNext;
-        } else {
-            toNext = -toNext;
-        }
-        leftDays += toNext == mNumberOfVisibleDays ? 0 : toNext;
+//        int toNext = leftDays % mNumberOfVisibleDays;
+//        if (toNext > 0 && toNext >= mNumberOfVisibleDays / 2) {
+//            toNext = mNumberOfVisibleDays - toNext;
+//        } else if (toNext > 0 && toNext < mNumberOfVisibleDays / 2) {
+//            toNext = -toNext;
+//        } else if (toNext < 0 && -toNext > mNumberOfVisibleDays / 2) {
+//            toNext = -mNumberOfVisibleDays - toNext;
+//        } else {
+//            toNext = -toNext;
+//        }
+//       leftDays += toNext == mNumberOfVisibleDays ? 0 : toNext;
         int distToNearestOrigin = (int) (mCurrentOrigin.x - leftDays * (mWidthPerDay + mColumnGap));
 
         if (distToNearestOrigin != 0) {
