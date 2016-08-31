@@ -3,6 +3,8 @@ package com.alamkanak.weekview;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.text.DateFormat;
@@ -27,7 +29,9 @@ public class SimpleDateViewProvider implements WeekView.DateViewProvider<SimpleD
     public DateHolder getView(Calendar date, @Nullable DateHolder convertView) {
         DateHolder holder = convertView;
         if (convertView == null) {
-            holder = new DateHolder(new TextView(mContext));
+            TextView view = new TextView(mContext);
+            view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            holder = new DateHolder(view);
         }
         holder.getView().setText(mDateFormat.format(date.getTime()));
         return holder;

@@ -63,7 +63,7 @@ public abstract class BaseActivity extends AppCompatActivity implements WeekView
         // the week view. This is optional.
         setupDateTimeInterpreter(false);
 
-        mWeekView.setDateViewProvider(this);
+       // mWeekView.setDateViewProvider(this);
     }
 
 
