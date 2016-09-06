@@ -19,26 +19,16 @@ Who uses it
 ---------------
 
 * [Series Addict](https://play.google.com/store/apps/details?id=com.alamkanak.seriesaddict)
-* Using the library? Just [tweet me](https://twitter.com/alamkanak) or [send me an email](mailto:alam.kanak@gmail.com).
 
 Usage
 ---------
 
 1. Import the library into your project.
-  * Grab via maven
-  
-    ```xml
-    <dependency>
-      <groupId>com.github.alamkanak</groupId>
-      <artifactId>android-week-view</artifactId>
-      <version>1.2.6</version>
-      <type>aar</type>
-    </dependency>
-    ```
+
   * Grab via gradle
   
     ```groovy
-    compile 'com.github.alamkanak:android-week-view:1.2.6'
+    compile 'com.github.melkonyan:Android-Week-View:parent-1.3.2'
     ```
 2. Add WeekView in your xml layout.
 
@@ -146,7 +136,7 @@ Use the following interfaces according to your need.
 Sample
 ----------
 
-There is also a [sample app](https://github.com/alamkanak/Android-Week-View/tree/master/sample) to get you started.
+There is also a [sample app](https://github.com/melkonyan/Android-Week-View/tree/master/sample) to get you started.
 
 To do
 -------
@@ -156,6 +146,10 @@ To do
 
 Changelog
 ---------
+
+**Version 1.3.2**
+
+* Add support for custom date header
 
 **Version 1.2.6**
 
@@ -231,7 +225,7 @@ Changelog
 License
 ----------
 
-    Copyright 2014 Raquib-ul-Alam
+    Copyright 2016 Melkonyan Oleksandr
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
